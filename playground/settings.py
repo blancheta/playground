@@ -45,7 +45,13 @@ INSTALLED_APPS = [
     "accounts",
     "laptops",
     "payment",
+    "django_group_model"
 ]
+
+# CUSTOM GROUP MODEL
+AUTH_USER_MODEL = 'accounts.Employee'
+AUTH_GROUP_MODEL = 'accounts.Group'
+
 
 #
 CORS_ORIGIN_ALLOW_ALL = True
