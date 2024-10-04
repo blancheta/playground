@@ -2,7 +2,15 @@ from django.contrib import admin
 from django.contrib.admin import ModelAdmin
 from django.contrib.auth.models import Group
 
-from accounts.models import Group as NewGroup
+from accounts.models import Group as NewGroup, Employee
+
+from django.contrib.auth.admin import UserAdmin
+
+class EmployeeAdmin(UserAdmin):
+    pass
+
+
+admin.site.register(Employee, EmployeeAdmin)
 
 class GroupAdmin(ModelAdmin):
 

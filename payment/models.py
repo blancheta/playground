@@ -24,7 +24,7 @@ class Order(models.Model):
     amount = MoneyField(max_digits=10, decimal_places=2, null=True,
                         default_currency=None)
     due_date = models.DateField()
-    user = models.ForeignKey(user_model, on_delete=models.CASCADE)
+    user = models.ForeignKey(user_model, on_delete=models.CASCADE, null=True)
 
     def __str__(self):
         return f'Order {self.id} - {self.status}'

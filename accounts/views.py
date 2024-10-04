@@ -33,3 +33,13 @@ class CustomLoginView(LoginView):
         timeout = get_constance("SESSION_TIMEOUT_SECONDS")
         request.session.set_expiry(timeout)
         return super().post(request, *args, **kwargs)
+
+
+class TemplateViewExample(TemplateView):
+
+    template_name = "login.html"
+
+
+def login_view(request):
+
+    return render(request, "login.html")

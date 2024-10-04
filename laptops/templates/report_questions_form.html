@@ -1,0 +1,74 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script type="text/javascript" src="{% static "ckeditor/ckeditor-init.js" %}"></script>
+<script type="text/javascript" src="{% static "ckeditor/ckeditor.js" %}"></script>
+</head>
+<body>
+
+{% load i18n %}
+
+<form action="{% url 'set_language' %}" method="post">{% csrf_token %}
+    <input name="next" type="hidden" value="{{ redirect_to }}">
+    <select name="language">
+        {% get_current_language as LANGUAGE_CODE %}
+        {% get_available_languages as LANGUAGES %}
+        {% get_language_info_list for LANGUAGES as languages %}
+        {% for language in languages %}
+            <option value="{{ language.code }}"{% if language.code == LANGUAGE_CODE %} selected{% endif %}>
+                {{ language.name_local }} ({{ language.code }})
+            </option>
+        {% endfor %}
+    </select>
+    <input type="submit" value="Go">
+</form>
+    {{ form.as_p }}
+
+{{ content|safe }}
+
+<h1>{% translate "Important questions:" %}</h1>
+<form method="POST" action="" enctype="multipart/form-data">
+    {% csrf_token %}
+    {% for question in questions %}
+    <div>
+        <h1>{{question.text}}</h1>
+    </div>
+        <div>
+            {{ form }}
+            <!-- {{ form }} -->
+            <textarea required name="comment" id="comment_{{question.id}}">
+                {% if question.found_answer != "None" %}
+                    {{ question.found_answer }}
+                {% endif %}
+            </textarea>
+            {% if question.attachment_required %}
+                <input required type="file" name="attachment_{{question.id}}" id="id_attachment_{{question.id}}">
+            {% endif%}
+            <input type="hidden" name="question" value="{{question.id}}">
+        </div>
+    {% endfor %}
+    <input type="submit" value="Next">
+</form>
+
+<style>
+    /* CSS to make header cells non-editable */
+table th {
+    pointer-events: none; /* Disable all pointer events */
+    user-select: none; /* Prevent text selection */
+    background-color: #f0f0f0; /* Optional: different background to indicate non-editable cells */
+}
+</style>
+<table>
+    <tr><th><input type="text" value="Col1"></th><th>Col2</th><th>Col3</th></tr>
+    <tr><th>TH</th><td>TD</td>TD<td>TD</td>TD<td>TD</td></tr>
+</table>
+<script>
+      CKEDITOR.replace( '.ckeditor');
+   </script>
+ <script type="text/javascript" src="{% static "ckeditor/ckeditor-init.js" %}"></script>
+<script type="text/javascript" src="{% static "ckeditor/ckeditor/ckeditor.js" %}"></script>
+</body>
+</html>

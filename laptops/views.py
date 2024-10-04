@@ -1,13 +1,12 @@
-import json
-
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from django.views.generic import TemplateView, ListView
-from django.views.generic.detail import BaseDetailView
+from django.db.models import OuterRef, Subquery
+from django.http import HttpResponseRedirect
+from django.views.generic import TemplateView, CreateView
 from django_filters.views import FilterView
 
 from laptops.filters import LaptopFilter
-from laptops.models import Laptop
+from laptops.forms import AnswerForm
+from laptops.models import Laptop, Answer, Question
+from laptops.utils import prepare_form_data
 
 
 class LaptopListView(FilterView):
@@ -20,38 +19,62 @@ class LaptopListView(FilterView):
         model = Laptop
 
 
-class JSONResponseMixin:
-    """
-    A mixin that can be used to render a JSON response.
-    """
+class LaptopCreateView(CreateView):
 
-    def render_to_json_response(self, context, **response_kwargs):
-        """
-        Returns a JSON response, transforming 'context' to make the payload.
-        """
-        return JsonResponse(self.get_data(context), **response_kwargs)
+    model = Laptop
 
-    def get_data(self, context):
-        """
-        Returns an object that will be serialized as JSON by json.dumps().
-        """
-        # Note: This is *EXTREMELY* naive; in reality, you'll need
-        # to do much more complex handling to ensure that arbitrary
-        # objects -- such as Django model instances or querysets
-        # -- can be serialized as JSON.
+    fields = ["name", "brand", "vendor", "image"]
+
+    template_name = "laptop_form.html"
+
+
+class AnswerCreateView(CreateView):
+    template_name = "answer_form.html"
+    form_class = AnswerForm
+
+    def get_initial(self):
+        initial = super().get_initial()
+        answer = Answer.objects.filter(id=4).first()
+        initial["comment"] = answer.comment
+        return initial
+
+    def get_success_url(self):
+        return ""
+
+class MultiAnswerFormView(TemplateView):
+    template_name = "report_questions_form.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        answers = Answer.objects.filter(question_id=OuterRef('pk')).values("comment")[:1]
+
+        questions = Question.objects.filter(parent=1)
+        questions_with_found_user_answer = questions.annotate(
+            found_answer=Subquery(answers)
+        )
+        context["questions"] = questions_with_found_user_answer
         return context
 
+    def post(self, request, *args, **kwargs):
+        questions = request.POST.getlist("question")
+        # [question 1, question 2]
+        contents = request.POST.getlist("comment")
+        # [comment 1, comment 2]
+        answers = list(zip(questions, contents))
 
-class TestAjaxView(TemplateView):
+        # [(question 1, comment1), (question 2, comment 2)]
 
-    template_name = "ajax_test.html"
+        for answer in answers:
+            form_param = prepare_form_data(answer, request.FILES)
 
+            form = AnswerForm(*form_param)
+            if form.is_valid():
+                answer = Answer.objects.filter(
+                    question_id=int(answer[0])
+                ).first()
+                if answer:
+                    form.instance.pk = answer.id
+                form.save()
 
-@csrf_exempt
-def increaseCounterView(request):
-
-    json_dict = json.loads(request.body)
-    counter = int(json_dict["counter"])
-    counter += 1
-
-    return JsonResponse({"counter": counter})
+        return HttpResponseRedirect("multi-questions")
