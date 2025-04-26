@@ -12,7 +12,9 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 import os
 from pathlib import Path
 
+import ldap
 from django.conf.global_settings import MEDIA_ROOT, STATIC_ROOT
+from django_auth_ldap.config import LDAPSearch
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -186,3 +188,16 @@ CKEDITOR_CONFIGS = {
 }
 
 CKEDITOR_UPLOAD_PATH = 'content/ckeditor/'
+
+AUTH_LDAP_SERVER_URI = "ldap://localhost"
+
+AUTH_LDAP_BIND_DN = "cn=admin,dc=example,dc=org"
+AUTH_LDAP_BIND_PASSWORD = "adminpassword"
+AUTH_LDAP_USER_SEARCH = LDAPSearch(
+    "ou=marketing,dc=example,dc=org", ldap.SCOPE_SUBTREE, "(uid=%(user)s)"
+)
+
+AUTHENTICATION_BACKENDS = [
+    "django_auth_ldap.backend.LDAPBackend",
+    "django.contrib.auth.backends.ModelBackend",
+]

@@ -5,6 +5,7 @@
     <title>Login</title>
 </head>
 <body>
+{{ form.errors }}
 <form method="post" action="{% url 'login' %}">
 {% csrf_token %}
 <table>
